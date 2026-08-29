@@ -250,6 +250,7 @@
         text-transform: uppercase;
         letter-spacing: 0.02em;
         white-space: nowrap;
+        line-height: 1.3;
     }
     table.datos td {
         padding: 6px 10px;
@@ -329,6 +330,59 @@
         font-size: 1.1rem;
         font-weight: 800;
         color: var(--texto);
+    }
+    .detalle-labs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    .detalle-lab-card {
+        background: #ffffff;
+        border: 1px solid var(--borde);
+        border-radius: 10px;
+        padding: 12px 14px;
+    }
+    .detalle-lab-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+        font-weight: 700;
+        font-size: 0.82rem;
+        color: var(--texto);
+        padding-bottom: 6px;
+        margin-bottom: 6px;
+        border-bottom: 1px solid var(--borde);
+    }
+    .detalle-lab-header .total {
+        color: #4338ca;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+    .detalle-lab-lista {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    .detalle-lab-lista li {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 10px;
+        font-size: 0.76rem;
+        padding: 3px 0;
+        color: var(--texto);
+    }
+    .detalle-lab-lista li .nombre {
+        color: var(--texto-sec);
+    }
+    .detalle-lab-lista li .cant {
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    .detalle-lab-lista li.otros .nombre {
+        font-style: italic;
     }
     .nota {
         font-size: 0.7rem;
@@ -435,18 +489,15 @@
             return '<div class="stat-card"><p class="titulo">' + titulo + '</p><p class="valor"' + style + '>' + valor + '</p>' + barHtml + det + '</div>';
         }
 
-        // headers[] son textos fijos definidos en este archivo (no datos del
-        // usuario), por eso es seguro usarlos tal cual como valor del atributo
-        // data-label.
         // headerColor es opcional (color solido del encabezado, por defecto azul).
+        // Los headers[] pueden incluir <br> para apilar palabras en 2 lineas y
+        // ahorrar ancho en columnas numericas.
         function tabla(headers, rows, headerColor) {
             const styleAttr = headerColor ? (' style="--th-bg:' + headerColor + ';"') : '';
             const thead = '<tr>' + headers.map(function (h) { return '<th>' + h + '</th>'; }).join('') + '</tr>';
             const tbody = rows.map(function (r) {
                 const cls = r._cls ? (' class="' + r._cls + '"') : '';
-                const tds = r.cells.map(function (c, idx) {
-                    return '<td data-label="' + headers[idx] + '">' + c + '</td>';
-                }).join('');
+                const tds = r.cells.map(function (c) { return '<td>' + c + '</td>'; }).join('');
                 return '<tr' + cls + '>' + tds + '</tr>';
             }).join('');
             return '<div class="tabla-wrap"><table class="datos"' + styleAttr + '><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table></div>';
@@ -620,7 +671,7 @@
                 const totCert = bloque.rows.reduce(function (s, p) { return s + (p.certificaciones || 0); }, 0);
                 const totAll = bloque.rows.reduce(function (s, p) { return s + (p.total || 0); }, 0);
                 rows.push({ _cls: 'total', cells: ['TOTAL', fmtN(totCal), fmtN(totCert), fmtN(totAll)] });
-                h += tabla(['Metr&oacute;logo', 'Calibraciones', 'Certificaciones', 'Total'], rows, color);
+                h += tabla(['Metr&oacute;logo', 'Cal.', 'Cert.', 'Total'], rows, color);
                 return h;
             };
 
@@ -641,7 +692,7 @@
             });
             const sum = function (k) { return rc.rows.reduce(function (s, r) { return s + (r[k] || 0); }, 0); };
             rows.push({ _cls: 'total', cells: ['TOTAL', fmtN(sum('aceptadas')), fmtN(sum('eq_aceptados')), fmtN(sum('rechazadas')), fmtN(sum('eq_rechazados')), fmtN(sum('seguimientos')), fmtN(sum('aceptadas_mes'))] });
-            html += tabla(['Ejecutivo', 'Aceptadas (D&iacute;a)', 'Eq. Aceptados', 'Rechazadas (D&iacute;a)', 'Eq. Rechazados', 'Seguimientos (D&iacute;a)', 'Aceptadas (Mes)'], rows, '#1e3a5f');
+            html += tabla(['Ejecutivo', 'Aceptadas<br>(D&iacute;a)', 'Eq.<br>Aceptados', 'Rechazadas<br>(D&iacute;a)', 'Eq.<br>Rechazados', 'Seguim.<br>(D&iacute;a)', 'Aceptadas<br>(Mes)'], rows, '#1e3a5f');
             return html;
         }
 
@@ -657,7 +708,7 @@
             const totEfici = totCargaInicial > 0 ? Math.round((sum('calibrado') / totCargaInicial) * 100) : (sum('calibrado') > 0 ? 100 : 0);
             const totAvance = totCarga > 0 ? Math.round((sum('calibrado') / totCarga) * 100) : 0;
             rows.push({ _cls: 'total', cells: ['TOTALES CONSOLIDADOS', fmtN(sum('ingreso')), fmtN(sum('calibrado')), fmtN(sum('restante')), totEfici + '%', totAvance + '%'] });
-            html += tabla(['Laboratorio / Magnitud', 'Ingreso Hoy', 'Calibrado Hoy', 'Carga Restante', '% Despeje', '% Avance'], rows, '#0f766e');
+            html += tabla(['Laboratorio / Magnitud', 'Ingreso<br>Hoy', 'Calibrado<br>Hoy', 'Carga<br>Restante', '%<br>Despeje', '%<br>Avance'], rows, '#0f766e');
             html += '<p class="nota">* % Despeje: eficiencia evacuando la mora antigua &mdash; Calibrado Hoy / (Restante + Calibrado - Ingreso).</p>';
             html += '<p class="nota">* % Avance: progreso frente a la carga acumulada total &mdash; Calibrado Hoy / (Restante + Calibrado).</p>';
             return html;
@@ -686,12 +737,38 @@
             html += '<div class="mini"><div class="l">Laboratorios</div><div class="v">' + fmtN(ep.laboratorios) + '</div></div>';
             html += '<div class="mini"><div class="l">Proformas / grupos</div><div class="v">' + fmtN(ep.grupos) + '</div></div>';
             html += '</div>';
+
+            // --- Resumen totalizado por laboratorio (vista rapida) ---
+            html += '<p class="subseccion"><i class="fas fa-list-ol"></i> Resumen por laboratorio</p>';
             const maxTotal = Math.max.apply(null, ep.rows.map(function (r) { return r.total || 0; }));
-            const rows = ep.rows.map(function (r) {
-                return { cells: [esc(r.laboratorio), esc(r.equipos), celdaTotal(r.total, maxTotal, '#4338ca')] };
+            const resumenRows = ep.rows.map(function (r) {
+                return { cells: [esc(r.laboratorio), celdaTotal(r.total, maxTotal, '#4338ca')] };
             });
-            rows.push({ _cls: 'total', cells: ['TOTAL GENERAL', '', fmtN(ep.total)] });
-            html += tabla(['Laboratorio', 'Equipos principales previstos', 'Total de equipos'], rows, '#312e81');
+            resumenRows.push({ _cls: 'total', cells: ['TOTAL GENERAL', fmtN(ep.total)] });
+            html += tabla(['Laboratorio', 'Total de equipos'], resumenRows, '#312e81');
+
+            // --- Detalle por laboratorio: lista ordenada (equipo | cantidad), no texto corrido ---
+            html += '<p class="subseccion"><i class="fas fa-list"></i> Detalle por laboratorio</p>';
+            html += '<div class="detalle-labs-grid">';
+            ep.rows.forEach(function (r) {
+                html += '<div class="detalle-lab-card">';
+                html += '<div class="detalle-lab-header"><span>' + esc(r.laboratorio) + '</span><span class="total">' + fmtN(r.total) + '</span></div>';
+                if (r.items && r.items.length > 0) {
+                    html += '<ul class="detalle-lab-lista">';
+                    r.items.forEach(function (it) {
+                        html += '<li><span class="nombre">' + esc(it.nombre) + '</span><span class="cant">' + fmtN(it.cantidad) + '</span></li>';
+                    });
+                    if (r.otros_count) {
+                        html += '<li class="otros"><span class="nombre">+ ' + fmtN(r.otros_count) + ' equipo(s) m&aacute;s</span><span class="cant">' + fmtN(r.otros_total) + '</span></li>';
+                    }
+                    html += '</ul>';
+                } else if (r.equipos) {
+                    // Compatibilidad con snapshots generados antes de este formato.
+                    html += '<p class="nota" style="margin:0;">' + esc(r.equipos) + '</p>';
+                }
+                html += '</div>';
+            });
+            html += '</div>';
             return html;
         }
 
