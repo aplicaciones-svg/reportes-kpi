@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reporte Ejecutivo de KPIs</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     :root {
         --azul: #0f4bb4;
@@ -34,7 +35,7 @@
         padding: 20px 16px 48px;
     }
     header.encabezado {
-        margin-bottom: 24px;
+        margin-bottom: 20px;
     }
     header.encabezado h1 {
         font-size: 1.5rem;
@@ -51,6 +52,88 @@
         font-size: 0.85rem;
         margin: 6px 0 0;
     }
+
+    /* ---- Resumen ejecutivo (banner superior) ---- */
+    .exec-resumen {
+        background: linear-gradient(135deg, #0f4bb4 0%, #1d4ed8 100%);
+        border-radius: 14px;
+        padding: 16px 18px;
+        margin-bottom: 22px;
+        color: #ffffff;
+    }
+    .exec-resumen-titulo {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        opacity: 0.88;
+        margin-bottom: 10px;
+    }
+    .exec-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .exec-chip {
+        background: rgba(255, 255, 255, 0.14);
+        border-radius: 10px;
+        padding: 8px 12px;
+        min-width: 126px;
+        flex: 1 1 126px;
+    }
+    .exec-chip-label {
+        font-size: 0.64rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        opacity: 0.82;
+        margin-bottom: 3px;
+        white-space: nowrap;
+    }
+    .exec-chip-valor {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #ffffff;
+    }
+    .exec-chip-valor.positivo { color: #86efac; }
+    .exec-chip-valor.negativo { color: #fca5a5; }
+
+    /* ---- Navegacion rapida por secciones ---- */
+    .nav-secciones {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 10px 0;
+        margin-bottom: 20px;
+        background: rgba(248, 250, 252, 0.95);
+        border-bottom: 1px solid var(--borde);
+    }
+    .nav-secciones a {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid var(--borde);
+        color: var(--texto);
+        font-size: 0.74rem;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+    .nav-secciones a:hover,
+    .nav-secciones a:active {
+        background: var(--azul-claro);
+        border-color: var(--azul);
+        color: var(--azul);
+    }
+
     .seccion-titulo {
         font-size: 1.05rem;
         font-weight: 800;
@@ -58,6 +141,10 @@
         margin: 34px 0 12px;
         padding-bottom: 6px;
         border-bottom: 2px solid var(--borde);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        scroll-margin-top: 64px;
     }
     .subseccion {
         font-size: 0.85rem;
@@ -170,6 +257,9 @@
         color: var(--texto);
         white-space: nowrap;
     }
+    table.datos tbody tr:hover td {
+        background: #f8fafc;
+    }
     table.datos tr.total td {
         font-weight: 800;
         background: var(--azul-claro);
@@ -239,23 +329,66 @@
         color: var(--texto-sec);
         padding: 48px 16px;
     }
+
+    /* ---- Skeleton de carga ---- */
+    @keyframes skeletonPulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.9; } }
+    .sk { background: #e2e8f0; border-radius: 8px; animation: skeletonPulse 1.3s ease-in-out infinite; }
+    .sk-title { height: 26px; width: 55%; margin-bottom: 10px; }
+    .sk-line { height: 14px; width: 35%; margin-bottom: 26px; }
+    .sk-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+    .sk-card { height: 108px; }
+
     @media (max-width: 560px) {
         .contenedor { padding: 14px 10px 40px; }
         .kpi-card .valor { font-size: 1.6rem; }
         header.encabezado h1 { font-size: 1.3rem; }
+        .exec-chip { min-width: 108px; }
         .stat-cards { grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 8px; }
         .stat-card { padding: 10px 12px; }
         .stat-card .valor { font-size: 1.15rem; }
         .seccion-titulo { font-size: 0.95rem; margin: 26px 0 10px; }
-        table.datos { font-size: 0.72rem; min-width: 420px; }
-        table.datos th, table.datos td { padding: 5px 8px; }
         .summary-cards { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+
+        /* Tablas -> tarjetas apiladas (mas legibles que el scroll horizontal en pantallas chicas) */
+        table.datos { min-width: 0; font-size: 0.78rem; }
+        table.datos thead { display: none; }
+        table.datos, table.datos tbody, table.datos tr, table.datos td { display: block; width: 100%; }
+        table.datos tr { padding: 8px 10px; border-top: 1px solid var(--borde); }
+        table.datos tr:first-child { border-top: none; }
+        table.datos td {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 10px;
+            padding: 3px 0;
+            border-top: none;
+            white-space: normal;
+            text-align: right;
+        }
+        table.datos td::before {
+            content: attr(data-label);
+            font-weight: 700;
+            font-size: 0.66rem;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            color: var(--texto-sec);
+            text-align: left;
+            flex-shrink: 0;
+        }
+        table.datos tr.total,
+        table.datos tr.destacada { border-radius: 8px; }
     }
 </style>
 </head>
 <body>
     <div class="contenedor" id="app">
-        <div class="estado-vacio">Cargando reporte...</div>
+        <div class="sk sk-title"></div>
+        <div class="sk sk-line"></div>
+        <div class="sk-cards">
+            <div class="sk sk-card"></div>
+            <div class="sk sk-card"></div>
+            <div class="sk sk-card"></div>
+        </div>
     </div>
 
     <script>
@@ -306,13 +439,56 @@
             return '<div class="stat-card"><p class="titulo">' + titulo + '</p><p class="valor"' + style + '>' + valor + '</p>' + barHtml + det + '</div>';
         }
 
+        // headers[] son textos fijos definidos en este archivo (no datos del
+        // usuario), por eso es seguro usarlos tal cual como valor del atributo
+        // data-label (se usan en el modo "tarjeta apilada" en pantallas chicas).
         function tabla(headers, rows) {
             const thead = '<tr>' + headers.map(function (h) { return '<th>' + h + '</th>'; }).join('') + '</tr>';
             const tbody = rows.map(function (r) {
                 const cls = r._cls ? (' class="' + r._cls + '"') : '';
-                return '<tr' + cls + '>' + r.cells.map(function (c) { return '<td>' + c + '</td>'; }).join('') + '</tr>';
+                const tds = r.cells.map(function (c, idx) {
+                    return '<td data-label="' + headers[idx] + '">' + c + '</td>';
+                }).join('');
+                return '<tr' + cls + '>' + tds + '</tr>';
             }).join('');
             return '<div class="tabla-wrap"><table class="datos"><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table></div>';
+        }
+
+        function chipTrend(icon, label, valorPct) {
+            const cls = claseTendencia(valorPct);
+            const arrow = cls === 'positivo' ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down';
+            return '<div class="exec-chip"><div class="exec-chip-label"><i class="fas ' + icon + '"></i> ' + label + '</div><div class="exec-chip-valor ' + cls + '"><i class="fas ' + arrow + '"></i> ' + formatPct(valorPct) + '</div></div>';
+        }
+
+        function chipPlain(icon, label, texto) {
+            return '<div class="exec-chip"><div class="exec-chip-label"><i class="fas ' + icon + '"></i> ' + label + '</div><div class="exec-chip-valor">' + texto + '</div></div>';
+        }
+
+        // Banner "resumen ejecutivo": reutiliza EXACTAMENTE los mismos campos y
+        // funciones de formato (formatPct/fmtN) que el resto del reporte, para
+        // garantizar que estos numeros nunca puedan desalinearse de los que se
+        // muestran mas abajo en detalle.
+        function renderResumenEjecutivo(data) {
+            const mensual = data.tendencia_mensual || {};
+            const semanal = data.tendencia_semanal || {};
+            const fc = data.facturacion_cobranzas || {};
+            const ef = fc.eficiencia_facturacion || {};
+            const ec = fc.eficiencia_cobro || {};
+
+            let html = '<div class="exec-resumen">';
+            html += '<div class="exec-resumen-titulo"><i class="fas fa-chart-line"></i> Resumen ejecutivo</div>';
+            html += '<div class="exec-chips">';
+            html += chipTrend('fa-calendar', 'Acumulado anual', data.crecimiento_ytd);
+            html += chipTrend('fa-calendar-day', 'Mes actual', mensual.variacion_porcentual);
+            html += chipTrend('fa-calendar-week', 'Semana actual', semanal.variacion_porcentual);
+            if (ef.porcentaje !== undefined && ef.porcentaje !== null) {
+                html += chipPlain('fa-file-invoice-dollar', 'Efic. facturaci&oacute;n', (ef.porcentaje || 0) + '%');
+            }
+            if (ec.porcentaje !== undefined && ec.porcentaje !== null) {
+                html += chipPlain('fa-hand-holding-dollar', 'Efic. cobro', (ec.porcentaje || 0) + '%');
+            }
+            html += '</div></div>';
+            return html;
         }
 
         function renderGestionComercial(gc) {
@@ -326,7 +502,7 @@
             const pctFaltaGestion = Math.max(0, 100 - (pgest.pct || 0));
             const pctRechazo = Math.max(0, 100 - (pef.pct || 0));
 
-            let html = '<div class="seccion-titulo" style="color:#0f4bb4;">1. Gesti&oacute;n comercial</div>';
+            let html = '<div class="seccion-titulo" style="color:#0f4bb4;"><i class="fas fa-briefcase"></i> 1. Gesti&oacute;n comercial</div>';
             html += '<div class="stat-cards">';
             html += statCard('Ingresos del d&iacute;a', fmtN(ing.total), [
                 'Lab: ' + fmtN(ing.lab) + ' &middot; Campo: ' + fmtN(ing.campo),
@@ -361,7 +537,7 @@
             const ef = fc.eficiencia_facturacion || {};
             const ec = fc.eficiencia_cobro || {};
 
-            let html = '<div class="seccion-titulo" style="color:#7c3aed;">2. Facturaci&oacute;n y cobranzas</div>';
+            let html = '<div class="seccion-titulo" style="color:#7c3aed;"><i class="fas fa-file-invoice-dollar"></i> 2. Facturaci&oacute;n y cobranzas</div>';
             html += '<div class="stat-cards">';
             html += statCard('Cr&eacute;dito vencido', fmtN(cv.total), [
                 '(' + fmtN(cv.total) + ' OTs y ' + fmtN(cv.items_total) + ' Equipos)',
@@ -402,7 +578,7 @@
             const rTotal = (r.enviados_hoy || 0) + (r.listo_certs || 0);
             const rPct = rTotal > 0 ? Math.round((r.enviados_hoy / rTotal) * 100) : 100;
 
-            let html = '<div class="seccion-titulo" style="color:#10b981;">3.1 Env&iacute;o de certificados al contado</div>';
+            let html = '<div class="seccion-titulo" style="color:#10b981;"><i class="fas fa-money-bill-wave"></i> 3.1 Env&iacute;o de certificados al contado</div>';
             html += '<div class="stat-cards">';
             html += statCard('Enviados hoy (contado)', fmtN(c.enviados_hoy) + ' certificados', []);
             html += statCard('Listos para enviar (contado)', 'OTs: ' + fmtN(c.listo_ots) + ' | Cert: ' + fmtN(c.listo_certs), []);
@@ -411,7 +587,7 @@
             ], null, cPct, '#10b981');
             html += '</div>';
 
-            html += '<div class="seccion-titulo" style="color:#3b82f6;">3.2 Env&iacute;o de certificados a cr&eacute;dito</div>';
+            html += '<div class="seccion-titulo" style="color:#3b82f6;"><i class="fas fa-credit-card"></i> 3.2 Env&iacute;o de certificados a cr&eacute;dito</div>';
             html += '<div class="stat-cards">';
             html += statCard('Enviados hoy (cr&eacute;dito)', fmtN(r.enviados_hoy) + ' certificados', []);
             html += statCard('Listos para enviar (cr&eacute;dito)', 'OTs: ' + fmtN(r.listo_ots) + ' | Cert: ' + fmtN(r.listo_certs), []);
@@ -424,7 +600,7 @@
 
         function renderProduccionMetrologo(pm) {
             if (!pm) return '';
-            let html = '<div class="seccion-titulo" style="color:#0f4bb4;">4. Producci&oacute;n y carga por laboratorio</div>';
+            let html = '<div class="seccion-titulo" style="color:#0f4bb4;"><i class="fas fa-industry"></i> 4. Producci&oacute;n y carga por laboratorio</div>';
 
             const buildProdTable = function (titulo, bloque) {
                 if (!bloque || !bloque.rows || bloque.rows.length === 0) return '';
@@ -440,14 +616,14 @@
                 return h;
             };
 
-            html += buildProdTable('Laboratorio &mdash; ' + esc(pm.laboratorio && pm.laboratorio.fecha_label), pm.laboratorio);
-            html += buildProdTable('Campo &mdash; ' + esc(pm.campo && pm.campo.rango_label), pm.campo);
+            html += buildProdTable('<i class="fas fa-flask"></i> Laboratorio &mdash; ' + esc(pm.laboratorio && pm.laboratorio.fecha_label), pm.laboratorio);
+            html += buildProdTable('<i class="fas fa-route"></i> Campo &mdash; ' + esc(pm.campo && pm.campo.rango_label), pm.campo);
             return html;
         }
 
         function renderResumenComercial(rc) {
             if (!rc || !rc.rows || rc.rows.length === 0) return '';
-            let html = '<p class="subseccion">Resumen de producci&oacute;n comercial &mdash; ' + esc(rc.fecha_label) + '</p>';
+            let html = '<p class="subseccion"><i class="fas fa-users"></i> Resumen de producci&oacute;n comercial &mdash; ' + esc(rc.fecha_label) + '</p>';
             const rows = rc.rows.map(function (r) {
                 return {
                     _cls: (rc.top_ejecutivo_mes && r.ejecutivo === rc.top_ejecutivo_mes) ? 'destacada' : '',
@@ -480,7 +656,7 @@
 
         function renderAnulaciones(an) {
             if (!an) return '';
-            let html = '<div class="seccion-titulo" style="color:#dc2626;">5. Anulaciones (' + fmtN(an.total) + ')</div>';
+            let html = '<div class="seccion-titulo" style="color:#dc2626;"><i class="fas fa-ban"></i> 5. Anulaciones (' + fmtN(an.total) + ')</div>';
             if (!an.rows || an.rows.length === 0) {
                 html += '<p class="nota">Sin anulaciones registradas.</p>';
                 return html;
@@ -494,7 +670,7 @@
 
         function renderEquiposPrevistos(ep) {
             if (!ep || !ep.rows || ep.rows.length === 0) return '';
-            let html = '<div class="seccion-titulo" style="color:#312e81;">7. Equipos previstos de ingreso</div>';
+            let html = '<div class="seccion-titulo" style="color:#312e81;"><i class="fas fa-dolly"></i> 7. Equipos previstos de ingreso</div>';
             html += '<p class="nota" style="margin-bottom:10px;">Proformas aceptadas con instrumento sin Orden de Trabajo. Ordenado de mayor a menor por laboratorio.</p>';
             html += '<div class="summary-cards">';
             html += '<div class="mini"><div class="l">Equipos previstos</div><div class="v">' + fmtN(ep.total) + '</div></div>';
@@ -529,8 +705,11 @@
                     <p class="subtitulo">Metrolog&iacute;a &amp; Servicios &middot; Generado el ${esc(data.generation_date || '')}</p>
                     <p class="consultado">Datos consultados: ${esc(data.consulted_date || '')}</p>
                 </header>
+            `;
 
-                <div class="seccion-titulo" style="margin-top:0;">Resumen de producci&oacute;n</div>
+            html += renderResumenEjecutivo(data);
+
+            html += `
                 <div class="kpi-grid">
                     <div class="kpi-card">
                         <p class="titulo">Acumulado anual (${esc(data.report_year)} vs ${esc(data.report_year - 1)})</p>
@@ -553,14 +732,28 @@
                 </div>
             `;
 
-            html += renderGestionComercial(data.gestion_comercial);
-            html += renderFacturacion(data.facturacion_cobranzas);
-            html += renderCertificados(data.envios_certificados);
-            html += renderProduccionMetrologo(data.produccion_metrologo);
-            html += renderResumenComercial(data.resumen_comercial);
-            html += renderProduccionCarga(data.produccion_carga_laboratorio);
-            html += renderAnulaciones(data.anulaciones);
-            html += renderEquiposPrevistos(data.equipos_previstos);
+            const produccionHtml = renderProduccionMetrologo(data.produccion_metrologo)
+                + renderResumenComercial(data.resumen_comercial)
+                + renderProduccionCarga(data.produccion_carga_laboratorio);
+
+            const sections = [
+                { id: 'sec-comercial', icon: 'fa-briefcase', label: 'Comercial', html: renderGestionComercial(data.gestion_comercial) },
+                { id: 'sec-facturacion', icon: 'fa-file-invoice-dollar', label: 'Facturaci&oacute;n', html: renderFacturacion(data.facturacion_cobranzas) },
+                { id: 'sec-certificados', icon: 'fa-certificate', label: 'Certificados', html: renderCertificados(data.envios_certificados) },
+                { id: 'sec-produccion', icon: 'fa-industry', label: 'Producci&oacute;n', html: produccionHtml },
+                { id: 'sec-anulaciones', icon: 'fa-ban', label: 'Anulaciones', html: renderAnulaciones(data.anulaciones) },
+                { id: 'sec-previstos', icon: 'fa-dolly', label: 'Previstos', html: renderEquiposPrevistos(data.equipos_previstos) }
+            ].filter(function (s) { return s.html && s.html.trim() !== ''; });
+
+            if (sections.length > 0) {
+                html += '<nav class="nav-secciones">' + sections.map(function (s) {
+                    return '<a href="#' + s.id + '"><i class="fas ' + s.icon + '"></i> ' + s.label + '</a>';
+                }).join('') + '</nav>';
+            }
+
+            sections.forEach(function (s) {
+                html += '<section id="' + s.id + '">' + s.html + '</section>';
+            });
 
             html += `
                 <footer class="pie">
@@ -583,9 +776,10 @@
             }
 
             // Validacion basica del formato esperado del token (mismo patron que
-            // genera secrets.token_urlsafe en el backend) -- solo para evitar
-            // pedir una URL con caracteres raros, no es una medida de seguridad
-            // (los datos igual son publicos de por si en el bucket).
+            // genera secrets.token_urlsafe en el backend, o el identificador
+            // legible tipo Reporte_KPIs_YYYY-MM-DD) -- solo para evitar pedir una
+            // URL con caracteres raros, no es una medida de seguridad (los datos
+            // igual son publicos de por si en el bucket).
             if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) {
                 app.innerHTML = '<div class="estado-vacio">Link de reporte inv&aacute;lido.</div>';
                 return;
