@@ -239,9 +239,17 @@
         color: var(--texto-sec);
         padding: 48px 16px;
     }
-    @media (max-width: 420px) {
+    @media (max-width: 560px) {
+        .contenedor { padding: 14px 10px 40px; }
         .kpi-card .valor { font-size: 1.6rem; }
         header.encabezado h1 { font-size: 1.3rem; }
+        .stat-cards { grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 8px; }
+        .stat-card { padding: 10px 12px; }
+        .stat-card .valor { font-size: 1.15rem; }
+        .seccion-titulo { font-size: 0.95rem; margin: 26px 0 10px; }
+        table.datos { font-size: 0.72rem; min-width: 420px; }
+        table.datos th, table.datos td { padding: 5px 8px; }
+        .summary-cards { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
     }
 </style>
 </head>
