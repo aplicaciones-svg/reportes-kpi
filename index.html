@@ -92,17 +92,6 @@
         color: var(--texto-sec);
         margin: 2px 0;
     }
-    .badge-tendencia {
-        display: inline-block;
-        font-size: 0.75rem;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 999px;
-        margin-left: 6px;
-        vertical-align: middle;
-    }
-    .badge-tendencia.positivo { background: var(--verde-claro); color: var(--verde); }
-    .badge-tendencia.negativo { background: var(--rojo-claro); color: var(--rojo); }
     footer.pie {
         margin-top: 40px;
         padding-top: 16px;
@@ -127,13 +116,22 @@
 </head>
 <body>
     <div class="contenedor" id="app">
-        <div class="estado-vacio">Cargando reporteâ€¦</div>
+        <div class="estado-vacio">Cargando reporte...</div>
     </div>
 
     <script>
-        // El backend reemplaza el comentario de abajo por el JSON real antes de
-        // enviar la pÃ¡gina (ver /reporte_kpis/<token> en server.py).
-        const REPORTE_DATA = {"generation_date": "28/08/2026, 10:44 p. m.", "consulted_date": "28/08/2026", "report_year": 2026, "crecimiento_ytd": 12.48, "crecimiento_ytd_info": {"anio_actual": 2026, "anio_anterior": 2025, "dia_actual": 28, "mes_nombre": "Ago", "porcentaje": 12.479284057010274, "total_actual": 27148, "total_anterior": 24136}, "tendencia_mensual": {"anio_actual": 2026, "anio_anterior": 2025, "dia_corte": 28, "mes": "Agosto", "porcentaje": 8.3, "produccion_actual": 5019, "produccion_anterior": 4636, "rango_dias": "1-28", "variacion_absoluta": 383, "variacion_porcentual": 8.3}, "tendencia_semanal": {"anio_actual": 2026, "anio_anterior": 2025, "produccion_actual": 752, "produccion_anterior": 718, "rango_actual": "24/08 - Hoy", "rango_anterior": "25/08 - 29/08/2025", "semana": 35, "semana_actual_label": "Sem 35 2026", "semana_anterior_label": "Sem 35 2025", "variacion_absoluta": 34, "variacion_porcentual": 4.7}} null;
+        // Esta pagina se aloja UNA sola vez en un hosting estatico (GitHub
+        // Pages) porque Supabase Storage se niega a servir archivos .html con su
+        // Content-Type real (los fuerza a text/plain por seguridad, para evitar
+        // que contenido subido por usuarios se ejecute como HTML bajo su dominio
+        // compartido). Los DATOS de cada reporte si viven en Supabase (como
+        // .json, que Supabase sirve correctamente) y esta pagina los pide por
+        // fetch() usando el token que viene en su propia URL (?token=...).
+        // NOTA: este archivo usa solo caracteres ASCII (entidades HTML para las
+        // tildes) a proposito, para evitar problemas de codificacion al copiar y
+        // pegar el contenido en el editor web de GitHub.
+        const SUPABASE_URL = 'https://tbvkfbppzgsgacdyhqcn.supabase.co';
+        const SUPABASE_BUCKET = 'ReportesSeguimientoOperativo';
 
         function formatPct(val) {
             const n = parseFloat(val) || 0;
@@ -148,7 +146,7 @@
         function render(data) {
             const app = document.getElementById('app');
             if (!data) {
-                app.innerHTML = '<div class="estado-vacio">No se encontrÃ³ informaciÃ³n para este reporte.</div>';
+                app.innerHTML = '<div class="estado-vacio">No se encontr&oacute; informaci&oacute;n para este reporte.</div>';
                 return;
             }
 
@@ -162,11 +160,11 @@
             app.innerHTML = `
                 <header class="encabezado">
                     <h1>Reporte Ejecutivo de KPIs</h1>
-                    <p class="subtitulo">MetrologÃ­a &amp; Servicios Â· Generado el ${data.generation_date || ''}</p>
+                    <p class="subtitulo">Metrolog&iacute;a &amp; Servicios &middot; Generado el ${data.generation_date || ''}</p>
                     <p class="consultado">Datos consultados: ${data.consulted_date || ''}</p>
                 </header>
 
-                <div class="seccion-titulo">Resumen de producciÃ³n</div>
+                <div class="seccion-titulo">Resumen de producci&oacute;n</div>
                 <div class="kpi-grid">
                     <div class="kpi-card">
                         <p class="titulo">Acumulado anual (${data.report_year} vs ${data.report_year - 1})</p>
@@ -189,18 +187,50 @@
                 </div>
 
                 <footer class="pie">
-                    <span>MetrologÃ­a &amp; Servicios</span>
+                    <span>Metrolog&iacute;a &amp; Servicios</span>
                     <span>Reporte generado el ${data.generation_date || ''}</span>
                 </footer>
             `;
         }
 
-        try {
-            render(REPORTE_DATA);
-        } catch (e) {
-            document.getElementById('app').innerHTML = '<div class="estado-vacio">OcurriÃ³ un error mostrando el reporte.</div>';
-            console.error(e);
+        async function cargarYRenderizar() {
+            const app = document.getElementById('app');
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+
+            if (!token) {
+                app.innerHTML = '<div class="estado-vacio">Falta el identificador del reporte en el link.</div>';
+                return;
+            }
+
+            // Validacion basica del formato esperado del token (mismo patron que
+            // genera secrets.token_urlsafe en el backend) -- solo para evitar
+            // pedir una URL con caracteres raros, no es una medida de seguridad
+            // (los datos igual son publicos de por si en el bucket).
+            if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) {
+                app.innerHTML = '<div class="estado-vacio">Link de reporte inv&aacute;lido.</div>';
+                return;
+            }
+
+            const dataUrl = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${encodeURIComponent(token)}.json`;
+
+            try {
+                const resp = await fetch(dataUrl);
+                if (!resp.ok) {
+                    app.innerHTML = resp.status === 404
+                        ? '<div class="estado-vacio">Este reporte no existe o fue eliminado.</div>'
+                        : '<div class="estado-vacio">No se pudo cargar el reporte (error de red).</div>';
+                    return;
+                }
+                const snapshot = await resp.json();
+                render(snapshot.data || snapshot);
+            } catch (e) {
+                console.error(e);
+                app.innerHTML = '<div class="estado-vacio">Ocurri&oacute; un error cargando el reporte. Verifica tu conexi&oacute;n a internet.</div>';
+            }
         }
+
+        cargarYRenderizar();
     </script>
 </body>
 </html>
