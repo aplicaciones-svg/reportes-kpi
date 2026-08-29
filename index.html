@@ -112,7 +112,7 @@
         background: rgba(248, 250, 252, 0.95);
         border-bottom: 1px solid var(--borde);
     }
-    .nav-secciones button {
+    .nav-secciones a {
         flex: 0 0 auto;
         display: inline-flex;
         align-items: center;
@@ -124,21 +124,15 @@
         color: var(--texto);
         font-size: 0.74rem;
         font-weight: 700;
-        font-family: inherit;
-        cursor: pointer;
+        text-decoration: none;
         white-space: nowrap;
     }
-    .nav-secciones button:hover {
+    .nav-secciones a:hover,
+    .nav-secciones a:active {
         background: var(--azul-claro);
         border-color: var(--azul);
         color: var(--azul);
     }
-    .nav-secciones button.activo {
-        background: var(--azul);
-        border-color: var(--azul);
-        color: #ffffff;
-    }
-    .tab-panel[hidden] { display: none; }
 
     .seccion-titulo {
         font-size: 1.05rem;
@@ -377,35 +371,8 @@
         .stat-card .valor { font-size: 1.15rem; }
         .seccion-titulo { font-size: 0.95rem; margin: 26px 0 10px; }
         .summary-cards { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
-
-        /* Tablas -> tarjetas apiladas (mas legibles que el scroll horizontal en pantallas chicas) */
-        table.datos { min-width: 0; font-size: 0.78rem; }
-        table.datos thead { display: none; }
-        table.datos, table.datos tbody, table.datos tr, table.datos td { display: block; width: 100%; }
-        table.datos tr { padding: 8px 10px; border-top: 1px solid var(--borde); }
-        table.datos tr:first-child { border-top: none; }
-        table.datos td {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            gap: 10px;
-            padding: 3px 0;
-            border-top: none;
-            white-space: normal;
-            text-align: right;
-        }
-        table.datos td::before {
-            content: attr(data-label);
-            font-weight: 700;
-            font-size: 0.66rem;
-            text-transform: uppercase;
-            letter-spacing: 0.02em;
-            color: var(--texto-sec);
-            text-align: left;
-            flex-shrink: 0;
-        }
-        table.datos tr.total,
-        table.datos tr.destacada { border-radius: 8px; }
+        table.datos { min-width: 440px; font-size: 0.74rem; }
+        table.datos th, table.datos td { padding: 6px 8px; }
     }
 </style>
 </head>
@@ -470,7 +437,7 @@
 
         // headers[] son textos fijos definidos en este archivo (no datos del
         // usuario), por eso es seguro usarlos tal cual como valor del atributo
-        // data-label (se usan en el modo "tarjeta apilada" en pantallas chicas).
+        // data-label.
         // headerColor es opcional (color solido del encabezado, por defecto azul).
         function tabla(headers, rows, headerColor) {
             const styleAttr = headerColor ? (' style="--th-bg:' + headerColor + ';"') : '';
@@ -789,13 +756,13 @@
             ].filter(function (s) { return s.html && s.html.trim() !== ''; });
 
             if (sections.length > 0) {
-                html += '<nav class="nav-secciones" role="tablist">' + sections.map(function (s, idx) {
-                    return '<button type="button" data-target="' + s.id + '" class="' + (idx === 0 ? 'activo' : '') + '"><i class="fas ' + s.icon + '"></i> ' + s.label + '</button>';
+                html += '<nav class="nav-secciones">' + sections.map(function (s) {
+                    return '<a href="#' + s.id + '"><i class="fas ' + s.icon + '"></i> ' + s.label + '</a>';
                 }).join('') + '</nav>';
             }
 
-            sections.forEach(function (s, idx) {
-                html += '<section id="' + s.id + '" class="tab-panel"' + (idx === 0 ? '' : ' hidden') + '>' + s.html + '</section>';
+            sections.forEach(function (s) {
+                html += '<section id="' + s.id + '">' + s.html + '</section>';
             });
 
             html += `
@@ -806,28 +773,6 @@
             `;
 
             app.innerHTML = html;
-            initTabs();
-        }
-
-        // Activa el sistema de pestañas: al hacer clic en un boton de
-        // .nav-secciones, muestra solo el <section> correspondiente y oculta
-        // el resto (evita el scroll largo de mostrar todas las secciones
-        // apiladas a la vez).
-        function initTabs() {
-            const nav = document.querySelector('.nav-secciones');
-            if (!nav) return;
-            nav.addEventListener('click', function (ev) {
-                const btn = ev.target.closest('button[data-target]');
-                if (!btn) return;
-                const targetId = btn.getAttribute('data-target');
-                nav.querySelectorAll('button').forEach(function (b) {
-                    b.classList.toggle('activo', b === btn);
-                });
-                document.querySelectorAll('.tab-panel').forEach(function (panel) {
-                    panel.hidden = (panel.id !== targetId);
-                });
-                nav.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
         }
 
         async function cargarYRenderizar() {
