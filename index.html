@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reporte Ejecutivo de KPIs</title>
+<style>
+    :root {
+        --azul: #0f4bb4;
+        --azul-claro: #eef4ff;
+        --verde: #15803d;
+        --verde-claro: #ecfdf5;
+        --rojo: #b91c1c;
+        --rojo-claro: #fef2f2;
+        --texto: #1e293b;
+        --texto-sec: #64748b;
+        --borde: #e2e8f0;
+        --fondo: #f8fafc;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        padding: 0;
+        background: var(--fondo);
+        color: var(--texto);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.5;
+        -webkit-text-size-adjust: 100%;
+    }
+    .contenedor {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 20px 16px 48px;
+    }
+    header.encabezado {
+        margin-bottom: 24px;
+    }
+    header.encabezado h1 {
+        font-size: 1.5rem;
+        margin: 0 0 4px;
+        color: var(--texto);
+    }
+    header.encabezado .subtitulo {
+        color: var(--texto-sec);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+    header.encabezado .consultado {
+        color: var(--texto-sec);
+        font-size: 0.85rem;
+        margin: 6px 0 0;
+    }
+    .seccion-titulo {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--texto);
+        margin: 32px 0 12px;
+        padding-bottom: 6px;
+        border-bottom: 2px solid var(--borde);
+    }
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 12px;
+    }
+    .kpi-card {
+        background: #ffffff;
+        border: 1px solid var(--borde);
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+    .kpi-card .titulo {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--texto-sec);
+        margin: 0 0 8px;
+    }
+    .kpi-card .valor {
+        font-size: 1.9rem;
+        font-weight: 800;
+        margin: 0 0 8px;
+        line-height: 1.1;
+    }
+    .kpi-card .valor.positivo { color: var(--verde); }
+    .kpi-card .valor.negativo { color: var(--rojo); }
+    .kpi-card .detalle {
+        font-size: 0.82rem;
+        color: var(--texto-sec);
+        margin: 2px 0;
+    }
+    .badge-tendencia {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 999px;
+        margin-left: 6px;
+        vertical-align: middle;
+    }
+    .badge-tendencia.positivo { background: var(--verde-claro); color: var(--verde); }
+    .badge-tendencia.negativo { background: var(--rojo-claro); color: var(--rojo); }
+    footer.pie {
+        margin-top: 40px;
+        padding-top: 16px;
+        border-top: 1px solid var(--borde);
+        font-size: 0.78rem;
+        color: var(--texto-sec);
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    .estado-vacio {
+        text-align: center;
+        color: var(--texto-sec);
+        padding: 48px 16px;
+    }
+    @media (max-width: 420px) {
+        .kpi-card .valor { font-size: 1.6rem; }
+        header.encabezado h1 { font-size: 1.3rem; }
+    }
+</style>
+</head>
+<body>
+    <div class="contenedor" id="app">
+        <div class="estado-vacio">Cargando reporteâ€¦</div>
+    </div>
+
+    <script>
+        // El backend reemplaza el comentario de abajo por el JSON real antes de
+        // enviar la pÃ¡gina (ver /reporte_kpis/<token> en server.py).
+        const REPORTE_DATA = {"generation_date": "28/08/2026, 10:44 p. m.", "consulted_date": "28/08/2026", "report_year": 2026, "crecimiento_ytd": 12.48, "crecimiento_ytd_info": {"anio_actual": 2026, "anio_anterior": 2025, "dia_actual": 28, "mes_nombre": "Ago", "porcentaje": 12.479284057010274, "total_actual": 27148, "total_anterior": 24136}, "tendencia_mensual": {"anio_actual": 2026, "anio_anterior": 2025, "dia_corte": 28, "mes": "Agosto", "porcentaje": 8.3, "produccion_actual": 5019, "produccion_anterior": 4636, "rango_dias": "1-28", "variacion_absoluta": 383, "variacion_porcentual": 8.3}, "tendencia_semanal": {"anio_actual": 2026, "anio_anterior": 2025, "produccion_actual": 752, "produccion_anterior": 718, "rango_actual": "24/08 - Hoy", "rango_anterior": "25/08 - 29/08/2025", "semana": 35, "semana_actual_label": "Sem 35 2026", "semana_anterior_label": "Sem 35 2025", "variacion_absoluta": 34, "variacion_porcentual": 4.7}} null;
+
+        function formatPct(val) {
+            const n = parseFloat(val) || 0;
+            const signo = n > 0 ? '+' : '';
+            return `${signo}${n.toFixed(2)}%`;
+        }
+
+        function claseTendencia(val) {
+            return (parseFloat(val) || 0) >= 0 ? 'positivo' : 'negativo';
+        }
+
+        function render(data) {
+            const app = document.getElementById('app');
+            if (!data) {
+                app.innerHTML = '<div class="estado-vacio">No se encontrÃ³ informaciÃ³n para este reporte.</div>';
+                return;
+            }
+
+            const ytd = data.crecimiento_ytd_info || {};
+            const mensual = data.tendencia_mensual || {};
+            const semanal = data.tendencia_semanal || {};
+            const ytdClase = claseTendencia(data.crecimiento_ytd);
+            const mesClase = claseTendencia(mensual.variacion_porcentual);
+            const semClase = claseTendencia(semanal.variacion_porcentual);
+
+            app.innerHTML = `
+                <header class="encabezado">
+                    <h1>Reporte Ejecutivo de KPIs</h1>
+                    <p class="subtitulo">MetrologÃ­a &amp; Servicios Â· Generado el ${data.generation_date || ''}</p>
+                    <p class="consultado">Datos consultados: ${data.consulted_date || ''}</p>
+                </header>
+
+                <div class="seccion-titulo">Resumen de producciÃ³n</div>
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <p class="titulo">Acumulado anual (${data.report_year} vs ${data.report_year - 1})</p>
+                        <p class="valor ${ytdClase}">${formatPct(data.crecimiento_ytd)}</p>
+                        <p class="detalle">${ytd.anio_actual || ''}: ${(ytd.total_actual || 0).toLocaleString('es-PE')} equipos</p>
+                        <p class="detalle">${ytd.anio_anterior || ''}: ${(ytd.total_anterior || 0).toLocaleString('es-PE')} equipos</p>
+                    </div>
+                    <div class="kpi-card">
+                        <p class="titulo">Mes actual (corte ${mensual.dia_corte || ''} ${mensual.mes || ''})</p>
+                        <p class="valor ${mesClase}">${formatPct(mensual.variacion_porcentual)}</p>
+                        <p class="detalle">${mensual.mes || ''} ${data.report_year}: ${(mensual.produccion_actual || 0).toLocaleString('es-PE')} equipos</p>
+                        <p class="detalle">${mensual.mes || ''} ${data.report_year - 1}: ${(mensual.produccion_anterior || 0).toLocaleString('es-PE')} equipos</p>
+                    </div>
+                    <div class="kpi-card">
+                        <p class="titulo">Semana actual (semana ${semanal.semana || ''})</p>
+                        <p class="valor ${semClase}">${formatPct(semanal.variacion_porcentual)}</p>
+                        <p class="detalle">Sem ${semanal.semana || ''} ${data.report_year}: ${(semanal.produccion_actual || 0).toLocaleString('es-PE')} equipos</p>
+                        <p class="detalle">Sem ${semanal.semana || ''} ${data.report_year - 1}: ${(semanal.produccion_anterior || 0).toLocaleString('es-PE')} equipos</p>
+                    </div>
+                </div>
+
+                <footer class="pie">
+                    <span>MetrologÃ­a &amp; Servicios</span>
+                    <span>Reporte generado el ${data.generation_date || ''}</span>
+                </footer>
+            `;
+        }
+
+        try {
+            render(REPORTE_DATA);
+        } catch (e) {
+            document.getElementById('app').innerHTML = '<div class="estado-vacio">OcurriÃ³ un error mostrando el reporte.</div>';
+            console.error(e);
+        }
+    </script>
+</body>
+</html>
