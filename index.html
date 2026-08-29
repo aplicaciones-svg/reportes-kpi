@@ -112,27 +112,33 @@
         background: rgba(248, 250, 252, 0.95);
         border-bottom: 1px solid var(--borde);
     }
-    .nav-secciones a {
+    .nav-secciones button {
         flex: 0 0 auto;
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 6px 12px;
+        padding: 7px 13px;
         border-radius: 999px;
         background: #ffffff;
         border: 1px solid var(--borde);
         color: var(--texto);
         font-size: 0.74rem;
         font-weight: 700;
-        text-decoration: none;
+        font-family: inherit;
+        cursor: pointer;
         white-space: nowrap;
     }
-    .nav-secciones a:hover,
-    .nav-secciones a:active {
+    .nav-secciones button:hover {
         background: var(--azul-claro);
         border-color: var(--azul);
         color: var(--azul);
     }
+    .nav-secciones button.activo {
+        background: var(--azul);
+        border-color: var(--azul);
+        color: #ffffff;
+    }
+    .tab-panel[hidden] { display: none; }
 
     .seccion-titulo {
         font-size: 1.05rem;
@@ -242,7 +248,7 @@
         font-size: 0.78rem;
     }
     table.datos th {
-        background: var(--azul);
+        background: var(--th-bg, var(--azul));
         color: #ffffff;
         text-align: left;
         padding: 8px 10px;
@@ -256,6 +262,29 @@
         border-top: 1px solid var(--borde);
         color: var(--texto);
         white-space: nowrap;
+    }
+    table.datos td .celda-total {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    table.datos td .celda-total .n {
+        font-weight: 700;
+        min-width: 1.6em;
+        text-align: right;
+    }
+    table.datos td .celda-total .mini-barra {
+        flex: 1 1 auto;
+        max-width: 70px;
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    table.datos td .celda-total .mini-barra > span {
+        display: block;
+        height: 100%;
+        border-radius: 3px;
     }
     table.datos tbody tr:hover td {
         background: #f8fafc;
@@ -442,7 +471,9 @@
         // headers[] son textos fijos definidos en este archivo (no datos del
         // usuario), por eso es seguro usarlos tal cual como valor del atributo
         // data-label (se usan en el modo "tarjeta apilada" en pantallas chicas).
-        function tabla(headers, rows) {
+        // headerColor es opcional (color solido del encabezado, por defecto azul).
+        function tabla(headers, rows, headerColor) {
+            const styleAttr = headerColor ? (' style="--th-bg:' + headerColor + ';"') : '';
             const thead = '<tr>' + headers.map(function (h) { return '<th>' + h + '</th>'; }).join('') + '</tr>';
             const tbody = rows.map(function (r) {
                 const cls = r._cls ? (' class="' + r._cls + '"') : '';
@@ -451,7 +482,16 @@
                 }).join('');
                 return '<tr' + cls + '>' + tds + '</tr>';
             }).join('');
-            return '<div class="tabla-wrap"><table class="datos"><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table></div>';
+            return '<div class="tabla-wrap"><table class="datos"' + styleAttr + '><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table></div>';
+        }
+
+        // Celda de "Total" con mini-barra proporcional al valor maximo de la
+        // columna (mismo espiritu que las tablas del PDF de referencia).
+        function celdaTotal(valor, maxValor, color) {
+            const v = Number(valor) || 0;
+            const max = Number(maxValor) || 0;
+            const pct = max > 0 ? Math.max(2, Math.round((v / max) * 100)) : 0;
+            return '<div class="celda-total"><span class="n">' + fmtN(v) + '</span><span class="mini-barra"><span style="width:' + pct + '%; background:' + (color || '#3b82f6') + ';"></span></span></div>';
         }
 
         function chipTrend(icon, label, valorPct) {
@@ -602,37 +642,39 @@
             if (!pm) return '';
             let html = '<div class="seccion-titulo" style="color:#0f4bb4;"><i class="fas fa-industry"></i> 4. Producci&oacute;n y carga por laboratorio</div>';
 
-            const buildProdTable = function (titulo, bloque) {
+            const buildProdTable = function (titulo, bloque, color) {
                 if (!bloque || !bloque.rows || bloque.rows.length === 0) return '';
                 let h = '<p class="subseccion">' + titulo + '</p>';
+                const maxTotal = Math.max.apply(null, bloque.rows.map(function (p) { return p.total || 0; }));
                 const rows = bloque.rows.map(function (p) {
-                    return { cells: [esc(p.metrologo), fmtN(p.calibraciones), fmtN(p.certificaciones), fmtN(p.total)] };
+                    return { cells: [esc(p.metrologo), fmtN(p.calibraciones), fmtN(p.certificaciones), celdaTotal(p.total, maxTotal, color)] };
                 });
                 const totCal = bloque.rows.reduce(function (s, p) { return s + (p.calibraciones || 0); }, 0);
                 const totCert = bloque.rows.reduce(function (s, p) { return s + (p.certificaciones || 0); }, 0);
                 const totAll = bloque.rows.reduce(function (s, p) { return s + (p.total || 0); }, 0);
                 rows.push({ _cls: 'total', cells: ['TOTAL', fmtN(totCal), fmtN(totCert), fmtN(totAll)] });
-                h += tabla(['Metr&oacute;logo', 'Calibraciones', 'Certificaciones', 'Total'], rows);
+                h += tabla(['Metr&oacute;logo', 'Calibraciones', 'Certificaciones', 'Total'], rows, color);
                 return h;
             };
 
-            html += buildProdTable('<i class="fas fa-flask"></i> Laboratorio &mdash; ' + esc(pm.laboratorio && pm.laboratorio.fecha_label), pm.laboratorio);
-            html += buildProdTable('<i class="fas fa-route"></i> Campo &mdash; ' + esc(pm.campo && pm.campo.rango_label), pm.campo);
+            html += buildProdTable('<i class="fas fa-flask"></i> Laboratorio &mdash; ' + esc(pm.laboratorio && pm.laboratorio.fecha_label), pm.laboratorio, '#0f766e');
+            html += buildProdTable('<i class="fas fa-route"></i> Campo &mdash; ' + esc(pm.campo && pm.campo.rango_label), pm.campo, '#0f766e');
             return html;
         }
 
         function renderResumenComercial(rc) {
             if (!rc || !rc.rows || rc.rows.length === 0) return '';
             let html = '<p class="subseccion"><i class="fas fa-users"></i> Resumen de producci&oacute;n comercial &mdash; ' + esc(rc.fecha_label) + '</p>';
+            const maxAceptMes = Math.max.apply(null, rc.rows.map(function (r) { return r.aceptadas_mes || 0; }));
             const rows = rc.rows.map(function (r) {
                 return {
                     _cls: (rc.top_ejecutivo_mes && r.ejecutivo === rc.top_ejecutivo_mes) ? 'destacada' : '',
-                    cells: [esc(r.ejecutivo), fmtN(r.aceptadas), fmtN(r.eq_aceptados), fmtN(r.rechazadas), fmtN(r.eq_rechazados), fmtN(r.seguimientos), fmtN(r.aceptadas_mes)]
+                    cells: [esc(r.ejecutivo), fmtN(r.aceptadas), fmtN(r.eq_aceptados), fmtN(r.rechazadas), fmtN(r.eq_rechazados), fmtN(r.seguimientos), celdaTotal(r.aceptadas_mes, maxAceptMes, '#15803d')]
                 };
             });
             const sum = function (k) { return rc.rows.reduce(function (s, r) { return s + (r[k] || 0); }, 0); };
             rows.push({ _cls: 'total', cells: ['TOTAL', fmtN(sum('aceptadas')), fmtN(sum('eq_aceptados')), fmtN(sum('rechazadas')), fmtN(sum('eq_rechazados')), fmtN(sum('seguimientos')), fmtN(sum('aceptadas_mes'))] });
-            html += tabla(['Ejecutivo', 'Aceptadas (D&iacute;a)', 'Eq. Aceptados', 'Rechazadas (D&iacute;a)', 'Eq. Rechazados', 'Seguimientos (D&iacute;a)', 'Aceptadas (Mes)'], rows);
+            html += tabla(['Ejecutivo', 'Aceptadas (D&iacute;a)', 'Eq. Aceptados', 'Rechazadas (D&iacute;a)', 'Eq. Rechazados', 'Seguimientos (D&iacute;a)', 'Aceptadas (Mes)'], rows, '#1e3a5f');
             return html;
         }
 
@@ -648,7 +690,7 @@
             const totEfici = totCargaInicial > 0 ? Math.round((sum('calibrado') / totCargaInicial) * 100) : (sum('calibrado') > 0 ? 100 : 0);
             const totAvance = totCarga > 0 ? Math.round((sum('calibrado') / totCarga) * 100) : 0;
             rows.push({ _cls: 'total', cells: ['TOTALES CONSOLIDADOS', fmtN(sum('ingreso')), fmtN(sum('calibrado')), fmtN(sum('restante')), totEfici + '%', totAvance + '%'] });
-            html += tabla(['Laboratorio / Magnitud', 'Ingreso Hoy', 'Calibrado Hoy', 'Carga Restante', '% Despeje', '% Avance'], rows);
+            html += tabla(['Laboratorio / Magnitud', 'Ingreso Hoy', 'Calibrado Hoy', 'Carga Restante', '% Despeje', '% Avance'], rows, '#0f766e');
             html += '<p class="nota">* % Despeje: eficiencia evacuando la mora antigua &mdash; Calibrado Hoy / (Restante + Calibrado - Ingreso).</p>';
             html += '<p class="nota">* % Avance: progreso frente a la carga acumulada total &mdash; Calibrado Hoy / (Restante + Calibrado).</p>';
             return html;
@@ -664,7 +706,7 @@
             const rows = an.rows.map(function (r) {
                 return { cells: [esc(r.empresa), esc(r.ot), esc(r.item), esc(r.equipo), esc(r.metrologo), esc(r.fecha), esc(r.motivo), esc(r.ejecutiva)] };
             });
-            html += tabla(['Empresa', 'OT', 'Item', 'Equipo', 'Metr&oacute;logo', 'Fecha', 'Motivo', 'Ejecutiva'], rows);
+            html += tabla(['Empresa', 'OT', 'Item', 'Equipo', 'Metr&oacute;logo', 'Fecha', 'Motivo', 'Ejecutiva'], rows, '#991b1b');
             return html;
         }
 
@@ -677,11 +719,12 @@
             html += '<div class="mini"><div class="l">Laboratorios</div><div class="v">' + fmtN(ep.laboratorios) + '</div></div>';
             html += '<div class="mini"><div class="l">Proformas / grupos</div><div class="v">' + fmtN(ep.grupos) + '</div></div>';
             html += '</div>';
+            const maxTotal = Math.max.apply(null, ep.rows.map(function (r) { return r.total || 0; }));
             const rows = ep.rows.map(function (r) {
-                return { cells: [esc(r.laboratorio), esc(r.equipos), fmtN(r.total)] };
+                return { cells: [esc(r.laboratorio), esc(r.equipos), celdaTotal(r.total, maxTotal, '#4338ca')] };
             });
             rows.push({ _cls: 'total', cells: ['TOTAL GENERAL', '', fmtN(ep.total)] });
-            html += tabla(['Laboratorio', 'Equipos principales previstos', 'Total de equipos'], rows);
+            html += tabla(['Laboratorio', 'Equipos principales previstos', 'Total de equipos'], rows, '#312e81');
             return html;
         }
 
@@ -746,13 +789,13 @@
             ].filter(function (s) { return s.html && s.html.trim() !== ''; });
 
             if (sections.length > 0) {
-                html += '<nav class="nav-secciones">' + sections.map(function (s) {
-                    return '<a href="#' + s.id + '"><i class="fas ' + s.icon + '"></i> ' + s.label + '</a>';
+                html += '<nav class="nav-secciones" role="tablist">' + sections.map(function (s, idx) {
+                    return '<button type="button" data-target="' + s.id + '" class="' + (idx === 0 ? 'activo' : '') + '"><i class="fas ' + s.icon + '"></i> ' + s.label + '</button>';
                 }).join('') + '</nav>';
             }
 
-            sections.forEach(function (s) {
-                html += '<section id="' + s.id + '">' + s.html + '</section>';
+            sections.forEach(function (s, idx) {
+                html += '<section id="' + s.id + '" class="tab-panel"' + (idx === 0 ? '' : ' hidden') + '>' + s.html + '</section>';
             });
 
             html += `
@@ -763,6 +806,28 @@
             `;
 
             app.innerHTML = html;
+            initTabs();
+        }
+
+        // Activa el sistema de pestañas: al hacer clic en un boton de
+        // .nav-secciones, muestra solo el <section> correspondiente y oculta
+        // el resto (evita el scroll largo de mostrar todas las secciones
+        // apiladas a la vez).
+        function initTabs() {
+            const nav = document.querySelector('.nav-secciones');
+            if (!nav) return;
+            nav.addEventListener('click', function (ev) {
+                const btn = ev.target.closest('button[data-target]');
+                if (!btn) return;
+                const targetId = btn.getAttribute('data-target');
+                nav.querySelectorAll('button').forEach(function (b) {
+                    b.classList.toggle('activo', b === btn);
+                });
+                document.querySelectorAll('.tab-panel').forEach(function (panel) {
+                    panel.hidden = (panel.id !== targetId);
+                });
+                nav.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
         }
 
         async function cargarYRenderizar() {
