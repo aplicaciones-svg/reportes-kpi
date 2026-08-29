@@ -29,7 +29,7 @@
         -webkit-text-size-adjust: 100%;
     }
     .contenedor {
-        max-width: 720px;
+        max-width: 900px;
         margin: 0 auto;
         padding: 20px 16px 48px;
     }
@@ -52,12 +52,18 @@
         margin: 6px 0 0;
     }
     .seccion-titulo {
-        font-size: 1rem;
-        font-weight: 700;
+        font-size: 1.05rem;
+        font-weight: 800;
         color: var(--texto);
-        margin: 32px 0 12px;
+        margin: 34px 0 12px;
         padding-bottom: 6px;
         border-bottom: 2px solid var(--borde);
+    }
+    .subseccion {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--texto);
+        margin: 18px 0 8px;
     }
     .kpi-grid {
         display: grid;
@@ -91,6 +97,131 @@
         font-size: 0.82rem;
         color: var(--texto-sec);
         margin: 2px 0;
+    }
+    .stat-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+    }
+    .stat-card {
+        background: #ffffff;
+        border: 1px solid var(--borde);
+        border-radius: 10px;
+        padding: 12px 14px;
+    }
+    .stat-card .titulo {
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        color: var(--texto-sec);
+        margin: 0 0 6px;
+    }
+    .stat-card .valor {
+        font-size: 1.3rem;
+        font-weight: 800;
+        margin: 0 0 4px;
+        line-height: 1.15;
+        color: var(--texto);
+    }
+    .stat-card .detalle {
+        font-size: 0.72rem;
+        color: var(--texto-sec);
+        margin: 1px 0;
+    }
+    .stat-card .barra {
+        height: 5px;
+        background: #e2e8f0;
+        border-radius: 3px;
+        margin: 7px 0 5px;
+        overflow: hidden;
+    }
+    .stat-card .barra > span {
+        display: block;
+        height: 100%;
+        border-radius: 3px;
+    }
+    .tabla-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border: 1px solid var(--borde);
+        border-radius: 10px;
+        margin-bottom: 8px;
+    }
+    table.datos {
+        border-collapse: collapse;
+        width: 100%;
+        min-width: 480px;
+        font-size: 0.78rem;
+    }
+    table.datos th {
+        background: var(--azul);
+        color: #ffffff;
+        text-align: left;
+        padding: 8px 10px;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+    }
+    table.datos td {
+        padding: 6px 10px;
+        border-top: 1px solid var(--borde);
+        color: var(--texto);
+        white-space: nowrap;
+    }
+    table.datos tr.total td {
+        font-weight: 800;
+        background: var(--azul-claro);
+    }
+    table.datos tr.destacada td {
+        background: #fff9c4;
+        font-weight: 700;
+    }
+    .banner-info {
+        background: #f1f5f9;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 0.8rem;
+        color: var(--texto-sec);
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .banner-info b {
+        color: var(--azul);
+        font-size: 0.95rem;
+    }
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    .summary-cards .mini {
+        background: #f1f5f9;
+        border: 1px solid var(--borde);
+        border-radius: 8px;
+        padding: 8px 10px;
+    }
+    .summary-cards .mini .l {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--texto-sec);
+    }
+    .summary-cards .mini .v {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--texto);
+    }
+    .nota {
+        font-size: 0.7rem;
+        font-style: italic;
+        color: var(--texto-sec);
+        margin: 4px 0 0;
     }
     footer.pie {
         margin-top: 40px;
@@ -143,6 +274,233 @@
             return (parseFloat(val) || 0) >= 0 ? 'positivo' : 'negativo';
         }
 
+        function fmtN(n) {
+            return (Number(n) || 0).toLocaleString('es-PE');
+        }
+
+        function esc(s) {
+            if (s === undefined || s === null) return '';
+            return String(s).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+
+        function barra(pct, color) {
+            if (pct === undefined || pct === null) return '';
+            const p = Math.max(0, Math.min(100, Number(pct) || 0));
+            return '<div class="barra"><span style="width:' + p + '%; background:' + color + ';"></span></div>';
+        }
+
+        function statCard(titulo, valor, detalles, valorColor, pct, barColor) {
+            const det = (detalles || []).map(function (d) { return '<p class="detalle">' + d + '</p>'; }).join('');
+            const barHtml = barra(pct, barColor || '#3b82f6');
+            const style = valorColor ? (' style="color:' + valorColor + ';"') : '';
+            return '<div class="stat-card"><p class="titulo">' + titulo + '</p><p class="valor"' + style + '>' + valor + '</p>' + barHtml + det + '</div>';
+        }
+
+        function tabla(headers, rows) {
+            const thead = '<tr>' + headers.map(function (h) { return '<th>' + h + '</th>'; }).join('') + '</tr>';
+            const tbody = rows.map(function (r) {
+                const cls = r._cls ? (' class="' + r._cls + '"') : '';
+                return '<tr' + cls + '>' + r.cells.map(function (c) { return '<td>' + c + '</td>'; }).join('') + '</tr>';
+            }).join('');
+            return '<div class="tabla-wrap"><table class="datos"><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table></div>';
+        }
+
+        function renderGestionComercial(gc) {
+            if (!gc) return '';
+            const ing = gc.ingresos || {};
+            const pg = gc.proformas_generadas || {};
+            const pa = gc.proformas_aceptadas || {};
+            const pgest = gc.proformas_gestionadas || {};
+            const pef = gc.eficiencia_aprobacion || {};
+            const pctAcept = pg.total > 0 ? Math.round((pa.total / pg.total) * 100) : 0;
+            const pctFaltaGestion = Math.max(0, 100 - (pgest.pct || 0));
+            const pctRechazo = Math.max(0, 100 - (pef.pct || 0));
+
+            let html = '<div class="seccion-titulo" style="color:#0f4bb4;">1. Gesti&oacute;n comercial</div>';
+            html += '<div class="stat-cards">';
+            html += statCard('Ingresos del d&iacute;a', fmtN(ing.total), [
+                'Lab: ' + fmtN(ing.lab) + ' &middot; Campo: ' + fmtN(ing.campo),
+                'Access L:' + fmtN(ing.access_lab) + ' C:' + fmtN(ing.access_campo),
+                'AppSheet L:' + fmtN(ing.appsheet_lab) + ' C:' + fmtN(ing.appsheet_campo)
+            ]);
+            html += statCard('Proformas generadas', fmtN(pg.total), [
+                'Access: ' + fmtN(pg.access) + ' &middot; AppSheet: ' + fmtN(pg.appsheet)
+            ]);
+            html += statCard('Proformas aceptadas', fmtN(pa.total) + ' / ' + fmtN(pg.total), [
+                'Access: ' + fmtN(pa.access) + ' &middot; AppSheet: ' + fmtN(pa.appsheet),
+                pctAcept + '% de efectividad'
+            ], '#15803d', pctAcept, '#15803d');
+            html += statCard('Proformas gestionadas ' + esc(pgest.target_year || ''), 'Pend: ' + fmtN(pgest.pendientes) + ' / ' + fmtN(pgest.generadas_anual), [
+                'Access: ' + fmtN(pgest.access) + ' &middot; AppSheet: ' + fmtN(pgest.appsheet),
+                (pgest.pct || 0) + '% gestionado (Falta: ' + pctFaltaGestion + '%)'
+            ], '#0f4bb4', pgest.pct, '#0f4bb4');
+            html += statCard('Eficiencia aprobaci&oacute;n ' + esc(pef.target_year || ''), 'Rech: ' + fmtN(pef.rechazadas) + ' / ' + fmtN(pef.generadas_anual), [
+                'Access: ' + fmtN(pef.access) + ' &middot; AppSheet: ' + fmtN(pef.appsheet),
+                (pef.pct || 0) + '% eficiencia (Rechazo: ' + pctRechazo + '%)'
+            ], '#b91c1c', pef.pct, '#b91c1c');
+            html += '</div>';
+            return html;
+        }
+
+        function renderFacturacion(fc) {
+            if (!fc) return '';
+            const cv = fc.credito_vencido || {};
+            const cp = fc.contado_sin_pago || {};
+            const fh = fc.facturados_hoy || {};
+            const ph = fc.pagados_hoy || {};
+            const ef = fc.eficiencia_facturacion || {};
+            const ec = fc.eficiencia_cobro || {};
+
+            let html = '<div class="seccion-titulo" style="color:#7c3aed;">2. Facturaci&oacute;n y cobranzas</div>';
+            html += '<div class="stat-cards">';
+            html += statCard('Cr&eacute;dito vencido', fmtN(cv.total), [
+                '(' + fmtN(cv.total) + ' OTs y ' + fmtN(cv.items_total) + ' Equipos)',
+                'Access: ' + fmtN(cv.access) + ' - AppSheet: ' + fmtN(cv.appsheet)
+            ], '#b91c1c');
+            html += statCard('Contado sin pago', fmtN(cp.total), [
+                '(' + fmtN(cp.total) + ' OTs y ' + fmtN(cp.items_total) + ' Equipos)',
+                'Access: ' + fmtN(cp.access) + ' - AppSheet: ' + fmtN(cp.appsheet)
+            ], '#b45309');
+            html += statCard('Facturados hoy', fmtN(fh.items_total), [
+                '(' + fmtN(fh.total) + ' OTs y ' + fmtN(fh.items_total) + ' Equipos)',
+                'Access: ' + fmtN(fh.items_access) + ' - AppSheet: ' + fmtN(fh.items_appsheet)
+            ], '#1d4ed8');
+            html += statCard('Pagados hoy', fmtN(ph.items_total), [
+                '(' + fmtN(ph.total) + ' OTs y ' + fmtN(ph.items_total) + ' Equipos)',
+                'Access: ' + fmtN(ph.items_access) + ' - AppSheet: ' + fmtN(ph.items_appsheet)
+            ], '#059669');
+            html += '</div>';
+
+            html += '<div class="stat-cards" style="margin-top:10px;">';
+            html += statCard('Eficiencia de facturaci&oacute;n', (ef.porcentaje || 0) + '%', [
+                fmtN(ef.facturadas) + ' / ' + fmtN(ef.aceptadas) + ' proformas'
+            ], null, ef.porcentaje, '#8b5cf6');
+            html += statCard('Eficiencia de cobro (pagos)', (ec.porcentaje || 0) + '%', [
+                fmtN(ec.pagadas) + ' / ' + fmtN(ec.aceptadas) + ' pagadas'
+            ], null, ec.porcentaje, '#10b981');
+            html += '</div>';
+            html += '<p class="nota">Nota: el denominador es el total de proformas aceptadas del mes actual.</p>';
+            return html;
+        }
+
+        function renderCertificados(env) {
+            if (!env) return '';
+            const c = env.contado || {};
+            const r = env.credito || {};
+            const cTotal = (c.enviados_hoy || 0) + (c.listo_certs || 0);
+            const cPct = cTotal > 0 ? Math.round((c.enviados_hoy / cTotal) * 100) : 100;
+            const rTotal = (r.enviados_hoy || 0) + (r.listo_certs || 0);
+            const rPct = rTotal > 0 ? Math.round((r.enviados_hoy / rTotal) * 100) : 100;
+
+            let html = '<div class="seccion-titulo" style="color:#10b981;">3.1 Env&iacute;o de certificados al contado</div>';
+            html += '<div class="stat-cards">';
+            html += statCard('Enviados hoy (contado)', fmtN(c.enviados_hoy) + ' certificados', []);
+            html += statCard('Listos para enviar (contado)', 'OTs: ' + fmtN(c.listo_ots) + ' | Cert: ' + fmtN(c.listo_certs), []);
+            html += statCard('Eficiencia env&iacute;o (contado)', cPct + '%', [
+                fmtN(c.enviados_hoy) + ' cert. enviados vs ' + fmtN(c.listo_certs) + ' pendientes'
+            ], null, cPct, '#10b981');
+            html += '</div>';
+
+            html += '<div class="seccion-titulo" style="color:#3b82f6;">3.2 Env&iacute;o de certificados a cr&eacute;dito</div>';
+            html += '<div class="stat-cards">';
+            html += statCard('Enviados hoy (cr&eacute;dito)', fmtN(r.enviados_hoy) + ' certificados', []);
+            html += statCard('Listos para enviar (cr&eacute;dito)', 'OTs: ' + fmtN(r.listo_ots) + ' | Cert: ' + fmtN(r.listo_certs), []);
+            html += statCard('Eficiencia env&iacute;o (cr&eacute;dito)', rPct + '%', [
+                fmtN(r.enviados_hoy) + ' cert. enviados vs ' + fmtN(r.listo_certs) + ' pendientes'
+            ], null, rPct, '#3b82f6');
+            html += '</div>';
+            return html;
+        }
+
+        function renderProduccionMetrologo(pm) {
+            if (!pm) return '';
+            let html = '<div class="seccion-titulo" style="color:#0f4bb4;">4. Producci&oacute;n y carga por laboratorio</div>';
+
+            const buildProdTable = function (titulo, bloque) {
+                if (!bloque || !bloque.rows || bloque.rows.length === 0) return '';
+                let h = '<p class="subseccion">' + titulo + '</p>';
+                const rows = bloque.rows.map(function (p) {
+                    return { cells: [esc(p.metrologo), fmtN(p.calibraciones), fmtN(p.certificaciones), fmtN(p.total)] };
+                });
+                const totCal = bloque.rows.reduce(function (s, p) { return s + (p.calibraciones || 0); }, 0);
+                const totCert = bloque.rows.reduce(function (s, p) { return s + (p.certificaciones || 0); }, 0);
+                const totAll = bloque.rows.reduce(function (s, p) { return s + (p.total || 0); }, 0);
+                rows.push({ _cls: 'total', cells: ['TOTAL', fmtN(totCal), fmtN(totCert), fmtN(totAll)] });
+                h += tabla(['Metr&oacute;logo', 'Calibraciones', 'Certificaciones', 'Total'], rows);
+                return h;
+            };
+
+            html += buildProdTable('Laboratorio &mdash; ' + esc(pm.laboratorio && pm.laboratorio.fecha_label), pm.laboratorio);
+            html += buildProdTable('Campo &mdash; ' + esc(pm.campo && pm.campo.rango_label), pm.campo);
+            return html;
+        }
+
+        function renderResumenComercial(rc) {
+            if (!rc || !rc.rows || rc.rows.length === 0) return '';
+            let html = '<p class="subseccion">Resumen de producci&oacute;n comercial &mdash; ' + esc(rc.fecha_label) + '</p>';
+            const rows = rc.rows.map(function (r) {
+                return {
+                    _cls: (rc.top_ejecutivo_mes && r.ejecutivo === rc.top_ejecutivo_mes) ? 'destacada' : '',
+                    cells: [esc(r.ejecutivo), fmtN(r.aceptadas), fmtN(r.eq_aceptados), fmtN(r.rechazadas), fmtN(r.eq_rechazados), fmtN(r.seguimientos), fmtN(r.aceptadas_mes)]
+                };
+            });
+            const sum = function (k) { return rc.rows.reduce(function (s, r) { return s + (r[k] || 0); }, 0); };
+            rows.push({ _cls: 'total', cells: ['TOTAL', fmtN(sum('aceptadas')), fmtN(sum('eq_aceptados')), fmtN(sum('rechazadas')), fmtN(sum('eq_rechazados')), fmtN(sum('seguimientos')), fmtN(sum('aceptadas_mes'))] });
+            html += tabla(['Ejecutivo', 'Aceptadas (D&iacute;a)', 'Eq. Aceptados', 'Rechazadas (D&iacute;a)', 'Eq. Rechazados', 'Seguimientos (D&iacute;a)', 'Aceptadas (Mes)'], rows);
+            return html;
+        }
+
+        function renderProduccionCarga(pc) {
+            if (!pc || !pc.rows || pc.rows.length === 0) return '';
+            let html = '<div class="banner-info"><span>Ingreso total del d&iacute;a (Access + AppSheet):</span><b>' + fmtN(pc.ingreso_total) + ' equipos</b></div>';
+            const rows = pc.rows.map(function (r) {
+                return { cells: [esc(r.laboratorio), fmtN(r.ingreso), fmtN(r.calibrado), fmtN(r.restante), r.pct_despeje + '%', r.pct_avance + '%'] };
+            });
+            const sum = function (k) { return pc.rows.reduce(function (s, r) { return s + (r[k] || 0); }, 0); };
+            const totCarga = sum('calibrado') + sum('restante');
+            const totCargaInicial = Math.max(0, sum('restante') + sum('calibrado') - sum('ingreso'));
+            const totEfici = totCargaInicial > 0 ? Math.round((sum('calibrado') / totCargaInicial) * 100) : (sum('calibrado') > 0 ? 100 : 0);
+            const totAvance = totCarga > 0 ? Math.round((sum('calibrado') / totCarga) * 100) : 0;
+            rows.push({ _cls: 'total', cells: ['TOTALES CONSOLIDADOS', fmtN(sum('ingreso')), fmtN(sum('calibrado')), fmtN(sum('restante')), totEfici + '%', totAvance + '%'] });
+            html += tabla(['Laboratorio / Magnitud', 'Ingreso Hoy', 'Calibrado Hoy', 'Carga Restante', '% Despeje', '% Avance'], rows);
+            html += '<p class="nota">* % Despeje: eficiencia evacuando la mora antigua &mdash; Calibrado Hoy / (Restante + Calibrado - Ingreso).</p>';
+            html += '<p class="nota">* % Avance: progreso frente a la carga acumulada total &mdash; Calibrado Hoy / (Restante + Calibrado).</p>';
+            return html;
+        }
+
+        function renderAnulaciones(an) {
+            if (!an) return '';
+            let html = '<div class="seccion-titulo" style="color:#dc2626;">5. Anulaciones (' + fmtN(an.total) + ')</div>';
+            if (!an.rows || an.rows.length === 0) {
+                html += '<p class="nota">Sin anulaciones registradas.</p>';
+                return html;
+            }
+            const rows = an.rows.map(function (r) {
+                return { cells: [esc(r.empresa), esc(r.ot), esc(r.item), esc(r.equipo), esc(r.metrologo), esc(r.fecha), esc(r.motivo), esc(r.ejecutiva)] };
+            });
+            html += tabla(['Empresa', 'OT', 'Item', 'Equipo', 'Metr&oacute;logo', 'Fecha', 'Motivo', 'Ejecutiva'], rows);
+            return html;
+        }
+
+        function renderEquiposPrevistos(ep) {
+            if (!ep || !ep.rows || ep.rows.length === 0) return '';
+            let html = '<div class="seccion-titulo" style="color:#312e81;">7. Equipos previstos de ingreso</div>';
+            html += '<p class="nota" style="margin-bottom:10px;">Proformas aceptadas con instrumento sin Orden de Trabajo. Ordenado de mayor a menor por laboratorio.</p>';
+            html += '<div class="summary-cards">';
+            html += '<div class="mini"><div class="l">Equipos previstos</div><div class="v">' + fmtN(ep.total) + '</div></div>';
+            html += '<div class="mini"><div class="l">Laboratorios</div><div class="v">' + fmtN(ep.laboratorios) + '</div></div>';
+            html += '<div class="mini"><div class="l">Proformas / grupos</div><div class="v">' + fmtN(ep.grupos) + '</div></div>';
+            html += '</div>';
+            const rows = ep.rows.map(function (r) {
+                return { cells: [esc(r.laboratorio), esc(r.equipos), fmtN(r.total)] };
+            });
+            rows.push({ _cls: 'total', cells: ['TOTAL GENERAL', '', fmtN(ep.total)] });
+            html += tabla(['Laboratorio', 'Equipos principales previstos', 'Total de equipos'], rows);
+            return html;
+        }
+
         function render(data) {
             const app = document.getElementById('app');
             if (!data) {
@@ -157,40 +515,53 @@
             const mesClase = claseTendencia(mensual.variacion_porcentual);
             const semClase = claseTendencia(semanal.variacion_porcentual);
 
-            app.innerHTML = `
+            let html = `
                 <header class="encabezado">
                     <h1>Reporte Ejecutivo de KPIs</h1>
-                    <p class="subtitulo">Metrolog&iacute;a &amp; Servicios &middot; Generado el ${data.generation_date || ''}</p>
-                    <p class="consultado">Datos consultados: ${data.consulted_date || ''}</p>
+                    <p class="subtitulo">Metrolog&iacute;a &amp; Servicios &middot; Generado el ${esc(data.generation_date || '')}</p>
+                    <p class="consultado">Datos consultados: ${esc(data.consulted_date || '')}</p>
                 </header>
 
-                <div class="seccion-titulo">Resumen de producci&oacute;n</div>
+                <div class="seccion-titulo" style="margin-top:0;">Resumen de producci&oacute;n</div>
                 <div class="kpi-grid">
                     <div class="kpi-card">
-                        <p class="titulo">Acumulado anual (${data.report_year} vs ${data.report_year - 1})</p>
+                        <p class="titulo">Acumulado anual (${esc(data.report_year)} vs ${esc(data.report_year - 1)})</p>
                         <p class="valor ${ytdClase}">${formatPct(data.crecimiento_ytd)}</p>
-                        <p class="detalle">${ytd.anio_actual || ''}: ${(ytd.total_actual || 0).toLocaleString('es-PE')} equipos</p>
-                        <p class="detalle">${ytd.anio_anterior || ''}: ${(ytd.total_anterior || 0).toLocaleString('es-PE')} equipos</p>
+                        <p class="detalle">${esc(ytd.anio_actual || '')}: ${fmtN(ytd.total_actual)} equipos</p>
+                        <p class="detalle">${esc(ytd.anio_anterior || '')}: ${fmtN(ytd.total_anterior)} equipos</p>
                     </div>
                     <div class="kpi-card">
-                        <p class="titulo">Mes actual (corte ${mensual.dia_corte || ''} ${mensual.mes || ''})</p>
+                        <p class="titulo">Mes actual (corte ${esc(mensual.dia_corte || '')} ${esc(mensual.mes || '')})</p>
                         <p class="valor ${mesClase}">${formatPct(mensual.variacion_porcentual)}</p>
-                        <p class="detalle">${mensual.mes || ''} ${data.report_year}: ${(mensual.produccion_actual || 0).toLocaleString('es-PE')} equipos</p>
-                        <p class="detalle">${mensual.mes || ''} ${data.report_year - 1}: ${(mensual.produccion_anterior || 0).toLocaleString('es-PE')} equipos</p>
+                        <p class="detalle">${esc(mensual.mes || '')} ${esc(data.report_year)}: ${fmtN(mensual.produccion_actual)} equipos</p>
+                        <p class="detalle">${esc(mensual.mes || '')} ${esc(data.report_year - 1)}: ${fmtN(mensual.produccion_anterior)} equipos</p>
                     </div>
                     <div class="kpi-card">
-                        <p class="titulo">Semana actual (semana ${semanal.semana || ''})</p>
+                        <p class="titulo">Semana actual (semana ${esc(semanal.semana || '')})</p>
                         <p class="valor ${semClase}">${formatPct(semanal.variacion_porcentual)}</p>
-                        <p class="detalle">Sem ${semanal.semana || ''} ${data.report_year}: ${(semanal.produccion_actual || 0).toLocaleString('es-PE')} equipos</p>
-                        <p class="detalle">Sem ${semanal.semana || ''} ${data.report_year - 1}: ${(semanal.produccion_anterior || 0).toLocaleString('es-PE')} equipos</p>
+                        <p class="detalle">Sem ${esc(semanal.semana || '')} ${esc(data.report_year)}: ${fmtN(semanal.produccion_actual)} equipos</p>
+                        <p class="detalle">Sem ${esc(semanal.semana || '')} ${esc(data.report_year - 1)}: ${fmtN(semanal.produccion_anterior)} equipos</p>
                     </div>
                 </div>
+            `;
 
+            html += renderGestionComercial(data.gestion_comercial);
+            html += renderFacturacion(data.facturacion_cobranzas);
+            html += renderCertificados(data.envios_certificados);
+            html += renderProduccionMetrologo(data.produccion_metrologo);
+            html += renderResumenComercial(data.resumen_comercial);
+            html += renderProduccionCarga(data.produccion_carga_laboratorio);
+            html += renderAnulaciones(data.anulaciones);
+            html += renderEquiposPrevistos(data.equipos_previstos);
+
+            html += `
                 <footer class="pie">
                     <span>Metrolog&iacute;a &amp; Servicios</span>
-                    <span>Reporte generado el ${data.generation_date || ''}</span>
+                    <span>Reporte generado el ${esc(data.generation_date || '')}</span>
                 </footer>
             `;
+
+            app.innerHTML = html;
         }
 
         async function cargarYRenderizar() {
