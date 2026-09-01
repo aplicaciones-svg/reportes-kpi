@@ -774,7 +774,7 @@
 
         function renderProgramacionesPendientes(pp) {
             if (!pp) return '';
-            let html = '<div class="seccion-titulo" style="color:#b45309;"><i class="fas fa-map-marked-alt"></i> 8. Programaciones de Campo Pendientes (' + fmtN(pp.total) + ')</div>';
+            let html = '<p class="subseccion"><i class="fas fa-map-marked-alt"></i> Programaciones de Campo Pendientes (' + fmtN(pp.total) + ')</p>';
             if (!pp.rows || pp.rows.length === 0) {
                 html += '<p class="nota" style="color:#15803d; font-weight:700; font-style:normal;">Sin programaciones pendientes &mdash; todo el backlog de Campo est&aacute; programado.</p>';
                 return html;
@@ -837,6 +837,7 @@
             `;
 
             const produccionHtml = renderProduccionMetrologo(data.produccion_metrologo)
+                + renderProgramacionesPendientes(data.programaciones_pendientes)
                 + renderResumenComercial(data.resumen_comercial)
                 + renderProduccionCarga(data.produccion_carga_laboratorio);
 
@@ -846,8 +847,7 @@
                 { id: 'sec-certificados', icon: 'fa-certificate', label: 'Certificados', html: renderCertificados(data.envios_certificados) },
                 { id: 'sec-produccion', icon: 'fa-industry', label: 'Producci&oacute;n', html: produccionHtml },
                 { id: 'sec-anulaciones', icon: 'fa-ban', label: 'Anulaciones', html: renderAnulaciones(data.anulaciones) },
-                { id: 'sec-previstos', icon: 'fa-dolly', label: 'Previstos', html: renderEquiposPrevistos(data.equipos_previstos) },
-                { id: 'sec-programaciones', icon: 'fa-map-marked-alt', label: 'Programaciones', html: renderProgramacionesPendientes(data.programaciones_pendientes) }
+                { id: 'sec-previstos', icon: 'fa-dolly', label: 'Previstos', html: renderEquiposPrevistos(data.equipos_previstos) }
             ].filter(function (s) { return s.html && s.html.trim() !== ''; });
 
             if (sections.length > 0) {
