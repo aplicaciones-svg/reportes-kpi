@@ -772,6 +772,23 @@
             return html;
         }
 
+        function renderProgramacionesPendientes(pp) {
+            if (!pp) return '';
+            let html = '<div class="seccion-titulo" style="color:#b45309;"><i class="fas fa-map-marked-alt"></i> 8. Programaciones de Campo Pendientes (' + fmtN(pp.total) + ')</div>';
+            if (!pp.rows || pp.rows.length === 0) {
+                html += '<p class="nota" style="color:#15803d; font-weight:700; font-style:normal;">Sin programaciones pendientes &mdash; todo el backlog de Campo est&aacute; programado.</p>';
+                return html;
+            }
+            const rows = pp.rows.map(function (r) {
+                const dias = Number(r.dias) || 0;
+                const color = dias > 15 ? '#b91c1c' : (dias > 7 ? '#b45309' : '#15803d');
+                const diasCell = '<span style="color:' + color + '; font-weight:700;">' + dias + 'd</span>';
+                return { cells: [esc(r.ot), esc(r.empresa), fmtN(r.equipos), diasCell] };
+            });
+            html += tabla(['OT', 'Empresa', 'Equipos', 'D&iacute;as'], rows, '#b45309');
+            return html;
+        }
+
         function render(data) {
             const app = document.getElementById('app');
             if (!data) {
@@ -829,7 +846,8 @@
                 { id: 'sec-certificados', icon: 'fa-certificate', label: 'Certificados', html: renderCertificados(data.envios_certificados) },
                 { id: 'sec-produccion', icon: 'fa-industry', label: 'Producci&oacute;n', html: produccionHtml },
                 { id: 'sec-anulaciones', icon: 'fa-ban', label: 'Anulaciones', html: renderAnulaciones(data.anulaciones) },
-                { id: 'sec-previstos', icon: 'fa-dolly', label: 'Previstos', html: renderEquiposPrevistos(data.equipos_previstos) }
+                { id: 'sec-previstos', icon: 'fa-dolly', label: 'Previstos', html: renderEquiposPrevistos(data.equipos_previstos) },
+                { id: 'sec-programaciones', icon: 'fa-map-marked-alt', label: 'Programaciones', html: renderProgramacionesPendientes(data.programaciones_pendientes) }
             ].filter(function (s) { return s.html && s.html.trim() !== ''; });
 
             if (sections.length > 0) {
